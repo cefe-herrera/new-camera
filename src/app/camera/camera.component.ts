@@ -1,4 +1,6 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ErrorService } from '../services/error.service';
+import { DeviceService } from '../services/device.service';
 
 @Component({
   selector: 'app-camera',
@@ -11,10 +13,25 @@ export class CameraComponent implements OnInit {
   videoElement!: ElementRef<HTMLVideoElement>;
 
 
-  constructor() { }
+  constructor(
+    private errorService: ErrorService,
+    private deviceService: DeviceService
+  ) { }
 
   ngOnInit(): void {
     console.log('CameraComponent.ngOnInit()');
+    this.deviceService.getDevicesCamera().then((devices: MediaDeviceInfo[]) => {
+      console.log('camera devices', devices);
+    });
+
+    this.deviceService.getDevicesMicrophone().then((devices: MediaDeviceInfo[]) => {
+      console.log('microphones devices', devices);
+    });
+
+    this.deviceService.getDevicesSpeaker().then((devices: MediaDeviceInfo[]) => {
+      console.log('speakers devices', devices);
+    });
+
   }
 
 
@@ -29,29 +46,9 @@ export class CameraComponent implements OnInit {
           this.videoElement.nativeElement.srcObject = stream;
         })
         .catch((error: DOMException) => {
-          console.error('Error accessing the webcam:', error);
 
-          switch (error.name ) {
-            case 'NotFoundError':
-              alert('No se encontró ninguna cámara. Por favor, verifica si tu cámara está conectada y habilitada.');
-              break;
-            case 'NotReadableError':
-              alert('No se puede acceder a la cámara porque está siendo utilizada por otra aplicación. Por favor, cierra cualquier otra aplicación que pueda estar usando la cámara e intenta nuevamente.');
-              break;
-            case 'OverconstrainedError':
-              alert('No se puede acceder a la cámara con las restricciones especificadas. Por favor, verifica las restricciones y vuelve a intentarlo.');
-              break;
-            case 'SecurityError':
-              alert('El acceso a la cámara está bloqueado por razones de seguridad. Asegúrate de que la página esté cargada a través de una conexión segura (HTTPS).');
-              break;
-            case 'NotAllowedError':
-              alert('El acceso a la cámara ha sido denegado. Por favor, permite el acceso a la cámara cuando se solicite.');
-              break;
-            default:
-              alert('No se puede acceder a la cámara. Por favor, verifica si tu cámara está conectada y habilitada.');
-              break;
+          this.errorService.getErrorMessage(error);
 
-          }
         });
 
     } else {
